@@ -6,9 +6,10 @@ ENV APP_NAME="iDRAC 6"  \
     DISPLAY_HEIGHT=621
 
 COPY keycode-hack.c /keycode-hack.c
+COPY icon.png /tmp/icon.png
 
-RUN APP_ICON_URL=https://raw.githubusercontent.com/DomiStyle/docker-idrac6/master/icon.png && \
-    install_app_icon.sh "$APP_ICON_URL"
+# On essaie d'installer l'icone mais on continue si ça échoue (problème nodejs)
+RUN install_app_icon.sh "/tmp/icon.png" || true
 
 RUN apt-get update && \
     apt-get install -y wget software-properties-common libx11-dev gcc xdotool && \
@@ -27,5 +28,11 @@ RUN rm /usr/lib/jvm/zulu-8-amd64/jre/lib/security/java.security
 
 COPY startapp.sh /startapp.sh
 COPY mountiso.sh /mountiso.sh
+
+# Installation du plugin F11
+RUN mkdir -p /opt/install
+COPY f11-injector.js /opt/install/f11-injector.js
+COPY install-f11.sh /etc/cont-init.d/99-install-f11.sh
+RUN chmod +x /etc/cont-init.d/99-install-f11.sh
 
 WORKDIR /app
