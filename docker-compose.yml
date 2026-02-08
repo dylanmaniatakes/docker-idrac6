@@ -1,41 +1,34 @@
-version: '3.1'
-
 services:
-  idrac1:
-    image: domistyle/idrac6
-    restart: always
+  idrac6:
+    # Build from the Dockerfile in this cloned repo
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Local tag for the image that gets built
+    image: idrac6-local:dev
+    container_name: idrac6
+
     ports:
-      - 5800:5800
-      - 5900:5900
+      - "5800:5800"  # noVNC web UI
+      - "5700:5900"  # raw VNC (optional)
+
+    # Put your secrets in ./.env (not committed)
+    env_file:
+      - .env
+
+    # Keep these as env var names expected by the container
     environment:
-      - IDRAC_HOST=idrac1.example.org
-      - IDRAC_USER=root
-      - IDRAC_PASSWORD=1234
-    # Experimental! To directly mount an iso as iDRAC virtual media, 
-    # uncomment the below and set to a filename that appears in /vmedia
-      # - VIRTUAL_ISO=name_of_iso.iso
+      IDRAC_HOST: ${IDRAC_HOST}
+      IDRAC_USER: ${IDRAC_USER}
+      IDRAC_PASSWORD: ${IDRAC_PASSWORD}
+      # Optional (uncomment if you want to mount an ISO from ./vmedia)
+      # VIRTUAL_ISO: ${VIRTUAL_ISO}
+
+    # Local folders inside this repo (create them if you need them)
     volumes:
-      - /path/to/app:/app
-      - /path/to/media:/vmedia
-      - /path/to/screenshots:/screenshots
-  idrac2:
-    image: domistyle/idrac6
-    restart: always
-    ports:
-      - 5801:5800
-      - 5901:5900
-    secrets:
-      - idrac_host
-      - idrac_user
-      - idrac_password
-    volumes:
-      - /path/to/app:/app
-      - /path/to/media:/vmedia
-      - /path/to/screenshots:/screenshots
-secrets:
-  idrac_host:
-    file: ./idrac_host.txt
-  idrac_user:
-    file: ./idrac_user.txt
-  idrac_password:
-    file: ./idrac_password.txt
+      - ./app:/app
+      - ./vmedia:/vmedia
+      - ./screenshots:/screenshots
+
+    restart: unless-stopped
